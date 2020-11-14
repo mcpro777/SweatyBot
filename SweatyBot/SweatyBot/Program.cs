@@ -94,9 +94,9 @@ namespace SweatyBot
 			var channel = _client.GetChannel(TextChannelGeneral) as SocketTextChannel;
 			await channel.SendMessageAsync($"Welcome {user.Mention} to {channel.Guild.Name}. As a cadet, you have limited visibility to see channels.");
 
-			//var role = user.Guild.Roles.FirstOrDefault(x => x.Id == RoleCadet);
-			//if (role != null) await user.AddRoleAsync(role);
-		}
+            var role = user.Guild.Roles.FirstOrDefault(x => x.Id == RoleCadet);
+            if (role != null) await user.AddRoleAsync(role);
+        }
 
 		private Task _client_MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
 		{
