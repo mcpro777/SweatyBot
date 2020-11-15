@@ -9,12 +9,13 @@ namespace SweatyBot
 {
     class Program
     {
-		const ulong TextChannelGeneral = 712730423893032973;
-		//const ulong TextChannelGeneral = 686232562636554259;    //mcpro
+		//const ulong TextChannelGeneral = 712730423893032973;
+		const ulong TextChannelGeneral = 686232562636554259;    //mcpro
 		const ulong TextChannelWardroom = 722996559641444402;
 		const ulong TextChannelBotChat = 729451587570761738;
 		const ulong VoiceChannelAlphaRoom = 712730424316788877;
-		const ulong RoleCadet = 717751935066963988;
+		//const ulong RoleCadet = 717751935066963988;
+		const ulong RoleCadet = 777313543908622367;  //mcpro
 
 		private DiscordSocketClient _client;
 		private readonly CommandService _commands;
@@ -88,15 +89,22 @@ namespace SweatyBot
 
 		private async Task _client_UserJoined(SocketGuildUser user)
         {
-			if (user.IsBot || user.IsWebhook) return;
+			try
+            {
+				if (user.IsBot || user.IsWebhook) return;
 
-			//Welcome user
-			var channel = _client.GetChannel(TextChannelGeneral) as SocketTextChannel;
-			await channel.SendMessageAsync($"Welcome {user.Mention} to {channel.Guild.Name}. As a cadet, you have limited visibility to see channels.");
+				var role = user.Guild.Roles.FirstOrDefault(x => x.Id == RoleCadet);
+				if (role != null) await user.AddRoleAsync(role);
 
-            var role = user.Guild.Roles.FirstOrDefault(x => x.Id == RoleCadet);
-            if (role != null) await user.AddRoleAsync(role);
-        }
+				//Welcome user
+				var channel = _client.GetChannel(TextChannelGeneral) as SocketTextChannel;
+				await channel.SendMessageAsync($"Welcome {user.Mention} to {channel.Guild.Name}. As a cadet, you have limited visibility to see channels.");
+			}
+			catch (Exception ex)
+            {
+				throw ex;
+			}
+		}
 
 		private Task _client_MessageUpdated(Cacheable<IMessage, ulong> before, SocketMessage after, ISocketMessageChannel channel)
 		{
