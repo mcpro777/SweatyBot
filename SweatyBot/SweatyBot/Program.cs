@@ -9,13 +9,13 @@ namespace SweatyBot
 {
     class Program
     {
-		//const ulong TextChannelGeneral = 712730423893032973;
-		const ulong TextChannelGeneral = 686232562636554259;    //mcpro
+		const ulong TextChannelGeneral = 712730423893032973;
+		//const ulong TextChannelGeneral = 686232562636554259;    //mcpro
 		const ulong TextChannelWardroom = 722996559641444402;
 		const ulong TextChannelBotChat = 729451587570761738;
 		const ulong VoiceChannelAlphaRoom = 712730424316788877;
-		//const ulong RoleCadet = 717751935066963988;
-		const ulong RoleCadet = 777313543908622367;  //mcpro
+		const ulong RoleCadet = 717751935066963988;
+		//const ulong RoleCadet = 777313543908622367;  //mcpro
 
 		private DiscordSocketClient _client;
 		private readonly CommandService _commands;
@@ -98,7 +98,10 @@ namespace SweatyBot
 
 				//Welcome user
 				var channel = _client.GetChannel(TextChannelGeneral) as SocketTextChannel;
-				await channel.SendMessageAsync($"Welcome {user.Mention} to {channel.Guild.Name}. As a cadet, you have limited visibility to see channels.");
+				if (channel != null)
+                {
+					await channel.SendMessageAsync($"Welcome {user.Mention} to {channel.Guild.Name}. As a cadet, you have limited visibility to see channels.");
+				}
 			}
 			catch (Exception ex)
             {
