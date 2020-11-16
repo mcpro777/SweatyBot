@@ -13,7 +13,7 @@ namespace SweatyBot.Services
 {
     public class BlacklistService : CustomService
     {
-        private const String connectionString = "DefaultEndpointsProtocol=https;AccountName=sweaty;AccountKey=xcpmVcJmV+0y6ZAildxeeGqLtkDHTyDxwfRNx4VA6KN6p7+QDG2v0suoNfMnSSWtLKrRChzzcIWL8B/y0+1mrQ==;EndpointSuffix=core.windows.net";
+        private String connectionString = Environment.GetEnvironmentVariable("SweatyAzureKey");
 
         //Get current list of shitheads
         public async Task GetBlacklist()
