@@ -13,7 +13,12 @@ namespace SweatyBot.Services
 {
     public class BlacklistService : CustomService
     {
-        private String connectionString = Environment.GetEnvironmentVariable("SweatyAzureKey");
+        private String connectionString;
+
+        public BlacklistService()
+        {
+            this.connectionString = Environment.GetEnvironmentVariable("SweatyAzureKey");
+        }
 
         //Get current list of shitheads
         public async Task GetBlacklist()
