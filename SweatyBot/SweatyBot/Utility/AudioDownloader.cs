@@ -23,7 +23,7 @@ namespace SweatyBot.Utility
         private readonly ConcurrentQueue<AudioFile> m_DownloadQueue = new ConcurrentQueue<AudioFile>();
 
         // Private variables.
-        private string m_DownloadPath = "tmp";              // Default folder path. This is relative to the running directory of the bot.
+        private string m_DownloadPath = "";              // Default folder path. This is relative to the running directory of the bot.
         private bool m_IsRunning = false;                   // Flag to check if it's in the middle of downloading already.
         private string m_CurrentlyDownloading = "";         // Currently downloading file.
         private bool m_AllowDuplicates = true;              // Flag for downloading duplicate items.
@@ -290,11 +290,14 @@ namespace SweatyBot.Utility
 
                 try
                 {
+                    //String args = "youtube-dl -x --audio-format mp3 "https://www.youtube.com/watch?v=d1acEVmnVhI&ab_channel=SmashingPumpkinsVEVO"";
+
                     // Get Video Title
                     ProcessStartInfo youtubedlMetaData = new ProcessStartInfo()
                     {
                         FileName = "youtube-dl",
-                        Arguments = $"-s -e {path}",// Add more flags for more options.
+                        //Arguments = $"-s -e {path}",// Add more flags for more options.
+                        Arguments = $"-x --audio-format mp3 \"{path}\"",
                         CreateNoWindow = true,
                         RedirectStandardOutput = true,
                         UseShellExecute = false
@@ -310,14 +313,14 @@ namespace SweatyBot.Utility
 
                     // Extract each line printed for it's corresponding data.
                     if (output.Length > 0)
-                        StreamData.Title = output[0];
+                        StreamData.Title = output[3].Substring(22);
 
                     // Set other properties as follows.
                     StreamData.IsNetwork = (bool)verifyNetwork;
                 }
-                catch
+                catch (Exception ex)
                 {
-                    Console.WriteLine("youtube-dl.exe failed to extract the data!");
+                    Console.WriteLine("youtube-dl.exe failed to extract the data!" + ex.ToString());
                     return null;
                 }
             }

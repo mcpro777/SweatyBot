@@ -13,7 +13,7 @@ namespace SweatyBot.Modules
     public class AudioModule : CustomModule
     {
         private readonly AudioService _service;
-        private const String downloadPath = @"c:\temp";
+        private const String downloadPath = @"F:\Git\SweatyBot\SweatyBot\SweatyBot\bin\Debug\netcoreapp3.1";
 
         public AudioModule(AudioService service)
         {

@@ -85,11 +85,11 @@ namespace SweatyBot.Services
                 return;
             }
 
-            // Attempt to connect to this audio channel.
-            var audioClient = await target.ConnectAsync();
-
             try // We should put a try block in case audioClient is null or some other error occurs.
             {
+                // Attempt to connect to this audio channel.
+                var audioClient = await target.ConnectAsync();
+
                 // Once connected, add it to the dictionary of connected channels.
                 if (m_ConnectedChannels.TryAdd(guild.Id, audioClient))
                 {
@@ -102,9 +102,9 @@ namespace SweatyBot.Services
                     return;
                 }
             }
-            catch
+            catch (Exception ex)
             {
-                Log("The client failed to connect to the target voice channel.");
+                Log("The client failed to connect to the target voice channel." + ex.ToString());
             }
 
             // If we can't add it to the dictionary or connecting didn't work properly, error.
