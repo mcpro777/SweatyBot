@@ -1,6 +1,0 @@
-SweatyAzureKey
-DefaultEndpointsProtocol=https;AccountName=sweaty;AccountKey=S2G4mod6pT63/bzkV7+XcN2+afsG3erLw1Tsmtrd6lyz4/b9q8GlN031L1C/F4HYj2RpqW0B9ZKOqjS6o1vAag==;EndpointSuffix=core.windows.net
-
-
-SweatyBotToken
-Nzc3MjMzNDIxNjg3OTgwMTAz.X7AdCA.IB3X6c7NxXeY1XAVDuJRAWHjaP8
