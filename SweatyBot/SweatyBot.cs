@@ -14,13 +14,8 @@ namespace SweatyBot
 {
 	public class SweatyBot
     {
-		const ulong TextChannelGeneral = 712730423893032973;
-		//const ulong TextChannelGeneral = 686232562636554259;    //mcpro
-		const ulong TextChannelWardroom = 722996559641444402;
-		const ulong TextChannelBotChat = 729451587570761738;
-		const ulong VoiceChannelAlphaRoom = 712730424316788877;
-		const ulong RoleCadet = 717751935066963988;
-		//const ulong RoleCadet = 777313543908622367;  //mcpro
+		private String server = "mcpro"; //"mcpro";
+		Dictionary<String, UInt64> ObjectIDs;
 		public static char PREFIX = '!';
 
 		private DiscordSocketClient _client;
@@ -29,6 +24,21 @@ namespace SweatyBot
 
 		public async Task MainAsync()
 		{
+			this.ObjectIDs = new Dictionary<String, UInt64>();
+			if (this.server == "sweaty")
+            {
+				this.ObjectIDs.Add("TextChannelGeneral", 712730423893032973);
+				this.ObjectIDs.Add("TextChannelWardroom", 722996559641444402);
+				this.ObjectIDs.Add("TextChannelBotChat", 729451587570761738);
+				this.ObjectIDs.Add("VoiceChannelAlphaRoom", 712730424316788877);
+				this.ObjectIDs.Add("RoleCadet", 717751935066963988);
+			}
+			else if (this.server == "mcpro")
+            {
+				this.ObjectIDs.Add("TextChannelGeneral", 686232562636554259);
+				this.ObjectIDs.Add("RoleCadet", 777313543908622367);
+			}
+
 			String token = Environment.GetEnvironmentVariable("SweatyBotToken");
 
 			var _config = new DiscordSocketConfig { MessageCacheSize = 100 };
@@ -104,12 +114,11 @@ namespace SweatyBot
 		private async Task UserJoined(SocketGuildUser user)
 		{
 			if (user.IsBot || user.IsWebhook) return;
-
-			var role = user.Guild.Roles.FirstOrDefault(x => x.Id == RoleCadet);
+			var role = user.Guild.Roles.FirstOrDefault(x => x.Id == this.ObjectIDs["RoleCadet"]);
 			if (role != null) await user.AddRoleAsync(role);
 
 			//Welcome user
-			var channel = _client.GetChannel(TextChannelGeneral) as SocketTextChannel;
+			var channel = _client.GetChannel(this.ObjectIDs["TextChannelGeneral"]) as SocketTextChannel;
 			if (channel != null)
 			{
 				await channel.SendMessageAsync($"Welcome {user.Mention} to {channel.Guild.Name}. As a cadet, you have limited visibility to see channels.");
@@ -120,7 +129,7 @@ namespace SweatyBot
 		{
 			if (user.IsBot || user.IsWebhook) return;
 
-			var channel = _client.GetChannel(TextChannelGeneral) as SocketTextChannel;
+			var channel = _client.GetChannel(this.ObjectIDs["TextChannelGeneral"]) as SocketTextChannel;
 			if (channel != null)
 			{
 				await channel.SendMessageAsync($"{user.Mention} left {channel.Guild.Name}.  Don't let the door hit ya in the ass, noob.");

@@ -178,7 +178,7 @@ namespace SweatyBot.Services
             if (guild == null) return;
 
             // Get audio info.
-            AudioFile song = await GetAudioFileAsync(path);
+            AudioFile song = await GetAudioFileAsync(path, false);
 
             // Can't play an empty song.
             if (song == null) return;
@@ -195,6 +195,7 @@ namespace SweatyBot.Services
             {
                 Log($"Now Playing: {song.Title}", (int)LogType.Text); // Reply in the text channel.
                 Log(song.Title, (int)LogType.Playing); // Set playing.
+                //await m_AudioPlayer.Play(audioClient, song); // The song should already be identified as local or network.
                 await m_AudioPlayer.Play(audioClient, song); // The song should already be identified as local or network.
                 Log("Nothing", (int)LogType.Playing);
             }
@@ -262,7 +263,14 @@ namespace SweatyBot.Services
         // AudioPlayback Functions. Pause, Resume, Stop, AdjustVolume.
         public void PauseAudio() { m_AudioPlayer.Pause(); }
         public void ResumeAudio() { m_AudioPlayer.Resume(); }
-        public void StopAudio() { m_AutoPlay = false; m_AutoPlayRunning = false; m_AudioPlayer.Stop(); }
+
+        public void StopAudio() 
+        { 
+            m_AutoPlay = false; 
+            m_AutoPlayRunning = false; 
+            m_AudioPlayer.Stop(); 
+        }
+
         public void AdjustVolume(float volume) { m_AudioPlayer.AdjustVolume(volume); } // Takes in a value from [0.0f - 1.0f].
 
         // Sets the autoplay service to be true. Likely, wherever this is set, we also check and start auto play.
@@ -318,7 +326,7 @@ namespace SweatyBot.Services
         public async Task PlaylistAddAsync(string path)
         {
             // Get audio info.
-            AudioFile audio = await GetAudioFileAsync(path);
+            AudioFile audio = await GetAudioFileAsync(path, false);
             if (audio != null)
             {
                 m_Playlist.Enqueue(audio); // Only add if there's no errors.
@@ -363,11 +371,11 @@ namespace SweatyBot.Services
         // Extracts simple meta data from the path and fills a new AudioFile
         // information about the audio source. If it fails in the downloader or here,
         // we simply return null.
-        private async Task<AudioFile> GetAudioFileAsync(string path)
+        private async Task<AudioFile> GetAudioFileAsync(string path, Boolean downloadFile = false)
         {
             try // We put this in a try catch block.
             {
-                AudioFile song = await m_AudioDownloader.GetAudioFileInfo(path);
+                AudioFile song = await m_AudioDownloader.GetAudioFileInfo(path, downloadFile);
                 if (song != null) // We check for a local available version.
                 {
                     string filename = m_AudioDownloader.GetItem(song.Title);
@@ -450,7 +458,7 @@ namespace SweatyBot.Services
         // Adds a song to the download queue.
         public async Task DownloadSongAsync(string path)
         {
-            AudioFile audio = await GetAudioFileAsync(path);
+            AudioFile audio = await GetAudioFileAsync(path, true);
             if (audio != null)
             {
                 Log($"Added to the download queue : {audio.Title}", (int)LogType.Text);

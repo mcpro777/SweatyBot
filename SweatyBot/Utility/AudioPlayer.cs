@@ -6,6 +6,11 @@ using System.Diagnostics;
 using System.IO;
 using System.Threading.Tasks;
 using SweatyBot.Models;
+using YoutubeExplode;
+using CliWrap;
+using YoutubeExplode.Videos.Streams;
+using System.Linq;
+using System.Threading;
 
 namespace SweatyBot.Utility
 {
@@ -22,6 +27,8 @@ namespace SweatyBot.Utility
         private bool m_IsPlaying = false;           // Flag to change to play or pause the audio.
         private float m_Volume = 1.0f;              // Volume value that's checked during playback. Reference: PlayAudioAsync.
         private int m_BLOCK_SIZE = 3840;            // Custom block size for playback, in bytes.
+        private CancellationTokenSource _tokenSource = null;
+        private CancellationToken _cancellationToken;
 
         // Creates a local stream using the file path specified and ffmpeg to stream it directly.
         // The format Discord takes is 16-bit 48000Hz PCM
@@ -133,6 +140,50 @@ namespace SweatyBot.Utility
             m_IsRunning = false;
         }
 
+        // Streaming version of playback.  Doesn't need to download file first.
+        private async Task AudioPlaybackStreamAsync(IAudioClient client, AudioFile song, CancellationToken token)
+        {
+            m_IsRunning = true;
+
+            MemoryStream memoryStream = null;
+            ValueTask<Stream> youtubeStream = new ValueTask<Stream>();
+
+            try
+            {
+                YoutubeClient youtube = new YoutubeClient();
+                var StreamManifest = await youtube.Videos.Streams.GetManifestAsync(song.FileName);
+                var StreamInfo = StreamManifest.GetAudioOnlyStreams()
+                    .Where(s => s.Container == Container.Mp4).SingleOrDefault();
+                youtubeStream = youtube.Videos.Streams.GetAsync(StreamInfo, token);
+
+                memoryStream = new MemoryStream();
+
+                var task = await Cli.Wrap("ffmpeg")
+                    .WithArguments(" -hide_banner -loglevel panic -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1")
+                    .WithStandardInputPipe(PipeSource.FromStream(youtubeStream.Result))
+                    .WithStandardOutputPipe(PipeTarget.ToStream(memoryStream))
+                    .ExecuteAsync(token);
+
+                if (m_Stream == null) m_Stream = client.CreatePCMStream(AudioApplication.Music);
+                m_IsPlaying = true;
+                await Task.Delay(500);      //Allow some time to buffer
+
+                await m_Stream.WriteAsync(memoryStream.ToArray(), 0, (int)memoryStream.Length, token);
+            }
+            catch (TaskCanceledException) { }
+            catch (OperationCanceledException) { }
+            catch (Exception exception)
+            {
+                Console.WriteLine("Play error: " + exception);
+            }
+
+            if (m_Stream != null) m_Stream.FlushAsync().Wait();
+            memoryStream.Dispose();
+            youtubeStream.Result.Dispose();
+            m_IsPlaying = false;
+            m_IsRunning = false;
+        }
+
         // Adjusts the byte array by the volume, scaling it by a factor [0.0f, 1.0f]
         private byte[] ScaleVolumeSafeAllocateBuffers(byte[] audioSamples, float volume)
         {
@@ -198,7 +249,12 @@ namespace SweatyBot.Utility
             while (m_IsRunning) await Task.Delay(1000);
 
             // Start playback.
-            await AudioPlaybackAsync(client, song);
+            //await AudioPlaybackAsync(client, song);
+
+            _tokenSource = new CancellationTokenSource();
+            _cancellationToken = _tokenSource.Token;
+            await AudioPlaybackStreamAsync(client, song, _cancellationToken);
+            //await AudioPlaybackAsync(client, song);
         }
 
         // Pauses the stream if it's playing. This affects the current AudioPlaybackAsync.
@@ -208,6 +264,15 @@ namespace SweatyBot.Utility
         public void Resume() { m_IsPlaying = true; }
 
         // Stops the stream if it's playing. This affects the current AudioPlaybackAsync.
-        public void Stop() { if (m_Process != null) m_Process.Kill(); } // This basically stops the current loop by exiting the process.
+        public void Stop() 
+        { 
+            if (m_Process != null) m_Process.Kill();
+            if (_tokenSource != null)
+            {
+                _tokenSource.Cancel();
+                _tokenSource.Dispose();
+            }
+            _tokenSource = null;
+        }
     }
 }

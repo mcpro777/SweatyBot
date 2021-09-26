@@ -243,10 +243,13 @@ namespace SweatyBot.Utility
         // Filename - source by local filename or from network link.
         // Title - name of the song.
         // IsNetwork - If it's local or network.
-        public async Task<AudioFile> GetAudioFileInfo(string path)
+        public async Task<AudioFile> GetAudioFileInfo(string path, Boolean downloadFile = false)
         {
             if (path == null) return null;
             Console.WriteLine("Extracting Meta Data for : " + path);
+
+            // Construct audio file.
+            AudioFile StreamData = new AudioFile();
 
             // Verify if it's a network path or not.
             bool? verifyNetwork = VerifyNetworkPath(path);
@@ -262,13 +265,12 @@ namespace SweatyBot.Utility
                 var youtube = new YoutubeClient();
                 var video = youtube.Search.GetResultsAsync(path);
                 var result = await video.FirstOrDefaultAsync();
-                path = result.Url;
+                    path = result.Url;
+                StreamData.Title = result.Title;
+                StreamData.FileName = result.Url;
 
                 verifyNetwork = true;   //Just disable all local file features
             }
-
-            // Construct audio file.
-            AudioFile StreamData = new AudioFile();
 
             // Local file.
             if (verifyNetwork == false)
@@ -305,59 +307,37 @@ namespace SweatyBot.Utility
             // Network file.
             else if (verifyNetwork == true)
             {
-                /*
-                    Stream right from youtube   
-
-                    YoutubeClient youtube = new YoutubeClient()
-                    var StreamManifest = await youtube.Videos.GetManifestAsync()
-                    var StreamInfo = await StreamManifest.GetAudioOnly().WithHighestBitrate();
-                    var stream = youtube.Videos.Streams.GetAsync(StreamInfo)
-
-                    var memoryStream = new MemoryStream();
-                            await Cli.Wrap("ffmpeg")
-                                .WithArguments(" -hide_banner -loglevel panic -i pipe:0 -ac 2 -f s16le -ar 48000 pipe:1")
-                                .WithStandardInputPipe(PipeSource.FromStream(strean))
-                                .WithStandardOutputPipe(PipeTarget.ToStream(memoryStream))
-                                .ExecuteAsync();
-
-
-                    using (var discord = AudioClient.CreatePCMStream(AudioApplication.Mixed))
-                            {
-                                try {await AudioClient.WriteAsync(memoryStream.ToArray(), 0, (int)memoryStream.Length); }
-                                finally { await AudioClient.FlushAsync(); }
-                            }
-                */
-
-
-                // youtube-dl.exe
-                Process youtubedl;
-
                 try
                 {
                     //String args = "youtube-dl -x --audio-format mp3 "https://www.youtube.com/watch?v=d1acEVmnVhI&ab_channel=SmashingPumpkinsVEVO"";
 
-                    // Get Video Title
-                    ProcessStartInfo youtubedlMetaData = new ProcessStartInfo()
+                    if (downloadFile)
                     {
-                        FileName = "youtube-dl",
-                        //Arguments = $"-s -e {path}",// Add more flags for more options.
-                        Arguments = $"-x --audio-format mp3 \"{path}\"",
-                        CreateNoWindow = true,
-                        RedirectStandardOutput = true,
-                        UseShellExecute = false
-                    };
-                    youtubedl = Process.Start(youtubedlMetaData);
-                    youtubedl.WaitForExit();
+                        // Get Video Title
+                        Process youtubedl;
+                        ProcessStartInfo youtubedlMetaData = new ProcessStartInfo()
+                        {
+                            FileName = "youtube-dl",
+                            //Arguments = $"-s -e {path}",// Add more flags for more options.
+                            Arguments = $"-x --audio-format mp3 \"{path}\"",
+                            CreateNoWindow = true,
+                            RedirectStandardOutput = true,
+                            UseShellExecute = false
+                        };
+                        youtubedl = Process.Start(youtubedlMetaData);
+                        youtubedl.WaitForExit();
 
-                    // Read the output of the simulation
-                    string[] output = youtubedl.StandardOutput.ReadToEnd().Split('\n');
+                        // Read the output of the simulation
+                        string[] output = youtubedl.StandardOutput.ReadToEnd().Split('\n');
+
+                        // Extract each line printed for it's corresponding data.
+                        if (output.Length > 0)
+                            StreamData.Title = output[3].Substring(22);
+                    } 
 
                     // Set the file name.
                     StreamData.FileName = path;
 
-                    // Extract each line printed for it's corresponding data.
-                    if (output.Length > 0)
-                        StreamData.Title = output[3].Substring(22);
 
                     // Set other properties as follows.
                     StreamData.IsNetwork = (bool)verifyNetwork;

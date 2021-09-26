@@ -38,7 +38,7 @@ namespace SweatyBot.Modules
         [Remarks("leave")]
         [Summary("Leaves the current voice channel.")]
         public async Task LeaveVoiceChannel()
-        {
+        { 
             await _service.LeaveAudioAsync(Context.Guild);
         }
 
