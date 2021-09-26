@@ -14,7 +14,7 @@ namespace SweatyBot
 {
 	public class SweatyBot
     {
-		private String server = "mcpro"; //"mcpro";
+		private String server = "sweaty"; //"mcpro";
 		Dictionary<String, UInt64> ObjectIDs;
 		public static char PREFIX = '!';
 
