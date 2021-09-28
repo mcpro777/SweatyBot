@@ -152,8 +152,7 @@ namespace SweatyBot.Utility
             {
                 YoutubeClient youtube = new YoutubeClient();
                 var StreamManifest = await youtube.Videos.Streams.GetManifestAsync(song.FileName);
-                var StreamInfo = StreamManifest.GetAudioOnlyStreams()
-                    .Where(s => s.Container == Container.Mp4).SingleOrDefault();
+                var StreamInfo = StreamManifest.GetAudioOnlyStreams().FirstOrDefault();
                 youtubeStream = youtube.Videos.Streams.GetAsync(StreamInfo, token);
 
                 memoryStream = new MemoryStream();
@@ -170,16 +169,27 @@ namespace SweatyBot.Utility
 
                 await m_Stream.WriteAsync(memoryStream.ToArray(), 0, (int)memoryStream.Length, token);
             }
-            catch (TaskCanceledException) { }
-            catch (OperationCanceledException) { }
+            catch (TaskCanceledException) 
+            {
+                m_IsPlaying = false;
+                m_IsRunning = false;
+            }
+            catch (OperationCanceledException) 
+            {
+                m_IsPlaying = false;
+                m_IsRunning = false;
+            }
             catch (Exception exception)
             {
+                m_IsPlaying = false;
+                m_IsRunning = false;
                 Console.WriteLine("Play error: " + exception);
             }
 
             if (m_Stream != null) m_Stream.FlushAsync().Wait();
-            memoryStream.Dispose();
-            youtubeStream.Result.Dispose();
+            if (memoryStream != null) memoryStream.Dispose();
+            if (youtubeStream != null && youtubeStream.Result != null) 
+                youtubeStream.Result.Dispose();
             m_IsPlaying = false;
             m_IsRunning = false;
         }
@@ -237,6 +247,11 @@ namespace SweatyBot.Utility
         // Returns if AudioPlaybackAsync is currently running.
         public bool IsRunning() { return m_IsRunning; }
 
+        public void Reset() 
+        {
+            this.m_Stream = null;
+        }        
+
         // Returns if the process is in the middle of AudioPlaybackAsync.
         public bool IsPlaying() { return ((m_Process != null) && m_IsPlaying); }
 
@@ -265,7 +280,9 @@ namespace SweatyBot.Utility
 
         // Stops the stream if it's playing. This affects the current AudioPlaybackAsync.
         public void Stop() 
-        { 
+        {
+            m_IsPlaying = false;
+            m_IsRunning = false;
             if (m_Process != null) m_Process.Kill();
             if (_tokenSource != null)
             {

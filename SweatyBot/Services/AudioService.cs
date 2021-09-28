@@ -126,6 +126,7 @@ namespace SweatyBot.Services
             // To avoid any issues, we stop the player before leaving the channel.
             if (m_AudioPlayer.IsRunning()) StopAudio();
             while (m_AudioPlayer.IsRunning()) await Task.Delay(1000); // Wait until it's fully stopped.
+            m_AudioPlayer.Reset();
 
             // Attempt to remove from the current dictionary, and if removed, stop it.
             if (m_ConnectedChannels.TryRemove(guild.Id, out var audioClient))
