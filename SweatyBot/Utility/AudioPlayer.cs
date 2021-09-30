@@ -143,18 +143,27 @@ namespace SweatyBot.Utility
         // Streaming version of playback.  Doesn't need to download file first.
         private async Task AudioPlaybackStreamAsync(IAudioClient client, AudioFile song, CancellationToken token)
         {
-            m_IsRunning = true;
-
             MemoryStream memoryStream = null;
             ValueTask<Stream> youtubeStream = new ValueTask<Stream>();
 
             try
             {
-                YoutubeClient youtube = new YoutubeClient();
-                var StreamManifest = await youtube.Videos.Streams.GetManifestAsync(song.FileName);
-                var StreamInfo = StreamManifest.GetAudioOnlyStreams().FirstOrDefault();
-                youtubeStream = youtube.Videos.Streams.GetAsync(StreamInfo, token);
+                try
+                {
+                    YoutubeClient youtube = new YoutubeClient();
+                    var StreamManifest = await youtube.Videos.Streams.GetManifestAsync(song.FileName);
+                    var StreamInfo = StreamManifest.GetAudioOnlyStreams().FirstOrDefault();
+                    youtubeStream = youtube.Videos.Streams.GetAsync(StreamInfo, token);
+                }
+                catch (Exception ex) 
+                {
+                    Console.WriteLine("Could not find video: " + ex);
+                    m_IsPlaying = false;
+                    m_IsRunning = false;
+                    return;
+                }
 
+                m_IsRunning = true;
                 memoryStream = new MemoryStream();
 
                 var task = await Cli.Wrap("ffmpeg")

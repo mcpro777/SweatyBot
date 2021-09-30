@@ -17,6 +17,7 @@ namespace SweatyBot
 		private String server = "sweaty"; //"mcpro";
 		Dictionary<String, UInt64> ObjectIDs;
 		public static char PREFIX = '!';
+		private static bool INIT = false;
 
 		private DiscordSocketClient _client;
 		private CommandService _commands;
@@ -51,9 +52,13 @@ namespace SweatyBot
 
 			_client.Ready += async () =>
 			{
-				Console.WriteLine("Bot is connected!");
-				await ConfigureCommands();
-				await _client.SetActivityAsync(new Game("for input (!help)", ActivityType.Watching, ActivityProperties.None, ""));
+				if (!INIT)
+                {
+					Console.WriteLine("Bot is connected!");
+					await ConfigureCommands();
+					await _client.SetActivityAsync(new Game("for input (!help)", ActivityType.Watching, ActivityProperties.None, ""));
+					INIT = true;
+				}
 			};
 
 			// Block this task until the program is closed.
